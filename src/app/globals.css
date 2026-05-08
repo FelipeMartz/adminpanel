@@ -1,26 +1,66 @@
 @import "tailwindcss";
 
+@theme {
+  --color-background: #09090b;
+  --color-foreground: #fafafa;
+  --color-card: #111114;
+  --color-card-foreground: #fafafa;
+  --color-popover: #09090b;
+  --color-popover-foreground: #fafafa;
+  --color-primary: #ffffff;
+  --color-primary-foreground: #09090b;
+  --color-secondary: #27272a;
+  --color-secondary-foreground: #fafafa;
+  --color-muted: #27272a;
+  --color-muted-foreground: #a1a1aa;
+  --color-accent: #27272a;
+  --color-accent-foreground: #fafafa;
+  --color-destructive: #7f1d1d;
+  --color-destructive-foreground: #fafafa;
+  --color-border: #27272a;
+  --color-input: #27272a;
+  --color-ring: #d4d4d8;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: 'Inter', sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.glass-card {
+  background: rgba(17, 17, 20, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.nav-link {
+  @apply flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-zinc-400 hover:text-white hover:bg-zinc-800/50;
+}
+
+.nav-link-active {
+  @apply flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-white bg-zinc-800;
+}
+
+input, textarea, select {
+  @apply bg-zinc-900 border-zinc-800 border rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition-all;
+}
+
+button {
+  @apply cursor-pointer transition-all active:scale-95;
+}
+
+.btn-primary {
+  @apply bg-white text-black font-semibold py-2 px-4 rounded-md hover:bg-zinc-200;
+}
+
+.btn-danger {
+  @apply bg-red-600/20 text-red-500 border border-red-500/30 font-semibold py-2 px-4 rounded-md hover:bg-red-600/30;
 }

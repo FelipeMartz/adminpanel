@@ -1,0 +1,14 @@
+C:\Users\jepel\ourweb\appexample\bin\Debug\net10.0\appexample.exe
+C:\Users\jepel\ourweb\appexample\bin\Debug\net10.0\appexample.deps.json
+C:\Users\jepel\ourweb\appexample\bin\Debug\net10.0\appexample.runtimeconfig.json
+C:\Users\jepel\ourweb\appexample\bin\Debug\net10.0\appexample.dll
+C:\Users\jepel\ourweb\appexample\bin\Debug\net10.0\appexample.pdb
+C:\Users\jepel\ourweb\appexample\obj\Debug\net10.0\appexample.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\jepel\ourweb\appexample\obj\Debug\net10.0\appexample.AssemblyInfoInputs.cache
+C:\Users\jepel\ourweb\appexample\obj\Debug\net10.0\appexample.AssemblyInfo.cs
+C:\Users\jepel\ourweb\appexample\obj\Debug\net10.0\appexample.csproj.CoreCompileInputs.cache
+C:\Users\jepel\ourweb\appexample\obj\Debug\net10.0\appexample.dll
+C:\Users\jepel\ourweb\appexample\obj\Debug\net10.0\refint\appexample.dll
+C:\Users\jepel\ourweb\appexample\obj\Debug\net10.0\appexample.pdb
+C:\Users\jepel\ourweb\appexample\obj\Debug\net10.0\appexample.genruntimeconfig.cache
+C:\Users\jepel\ourweb\appexample\obj\Debug\net10.0\ref\appexample.dll
