@@ -1,5 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
+import GoogleProvider from "next-auth/providers/google";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -7,14 +8,27 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.DISCORD_CLIENT_ID || "",
       clientSecret: process.env.DISCORD_CLIENT_SECRET || "",
     }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    }),
   ],
   callbacks: {
     async signIn({ user, account, profile }: any) {
-      const whitelist = process.env.DISCORD_WHITELIST?.split(",") || [];
-      const discordId = profile?.id;
+      if (account?.provider === "discord") {
+        const whitelist = process.env.DISCORD_WHITELIST?.split(",").map(s => s.trim()) || [];
+        const discordId = profile?.id;
+        if (discordId && whitelist.includes(discordId)) {
+          return true;
+        }
+      }
 
-      if (discordId && whitelist.includes(discordId)) {
-        return true;
+      if (account?.provider === "google") {
+        const whitelist = process.env.GMAIL_WHITELIST?.split(",").map(s => s.trim()) || [];
+        const email = user?.email;
+        if (email && whitelist.includes(email)) {
+          return true;
+        }
       }
       
       // Si no está en la whitelist, denegar acceso

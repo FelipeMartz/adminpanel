@@ -48,6 +48,33 @@ export class KeyAuth {
     }
   }
 
+  async unbanUser(user: string) {
+    try {
+      const response = await axios.get(`${SELLER_API_URL}?sellerkey=${this.sellerkey}&type=unbanuser&user=${user}`);
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  }
+
+  async resetHwid(user: string) {
+    try {
+      const response = await axios.get(`${SELLER_API_URL}?sellerkey=${this.sellerkey}&type=resetuser&user=${user}`);
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  }
+
+  async kickSession(user: string) {
+    try {
+      const response = await axios.get(`${SELLER_API_URL}?sellerkey=${this.sellerkey}&type=kickuser&user=${user}`);
+      return response.data;
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  }
+
   async fetchUser(user: string) {
     try {
       const response = await axios.get(`${SELLER_API_URL}?sellerkey=${this.sellerkey}&type=userdata&user=${user}`);

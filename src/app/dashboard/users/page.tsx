@@ -5,12 +5,11 @@ import {
   Search, 
   ShieldAlert, 
   Loader2, 
-  UserX, 
-  UserCheck, 
-  Calendar, 
-  Hash, 
   Activity,
-  Key
+  RefreshCw,
+  Edit2,
+  Trash2,
+  ShieldBan
 } from 'lucide-react';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
@@ -30,7 +29,7 @@ export default function UsersPage() {
         setUsers(response.data.users || []);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error loading users');
+      setError('Error loading users');
     } finally {
       setLoading(false);
     }
@@ -38,33 +37,50 @@ export default function UsersPage() {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+    const interval = setInterval(fetchUsers, 5000);
 
-  const handleBanUser = async (username: string) => {
-    const reason = prompt(`Ban reason for ${username}?`, "Banned from admin panel");
-    if (reason === null) return;
+    if (status || error) {
+      const timer = setTimeout(() => { setStatus(''); setError(''); }, 3000);
+      return () => {
+        clearTimeout(timer);
+        clearInterval(interval);
+      };
+    }
+
+    return () => clearInterval(interval);
+  }, [status, error]);
+
+  const handleRename = async (originalUsername: string) => {
+    const newName = prompt(`Enter new name for ${originalUsername}:`);
+    if (!newName) return;
 
     try {
-      const response = await axios.post('/api/admin/ban', { username, reason });
+      const response = await axios.post('/api/admin/users/action', { 
+        originalUsername, 
+        action: 'rename', 
+        value: newName 
+      });
       if (response.data.success) {
-        setStatus(`User ${username} banned`);
+        setStatus(`User ${originalUsername} renamed to ${newName}`);
         fetchUsers();
       }
     } catch (err: any) {
-      setError('Error banning user');
+      setError('Error renaming user');
     }
   };
 
-  const handleBanIp = async (ip: string) => {
-    if (!ip || ip === 'N/A') return alert('This user has no registered IP');
-    
-    const reason = prompt(`Ban reason for IP ${ip}?`, "Violation of terms");
-    if (reason === null) return;
+  const handleBan = async (ip: string) => {
+    if (!ip || ip === 'Unknown') return alert('No IP address found for this user');
+    if (!confirm(`Are you sure you want to ban IP: ${ip}?`)) return;
 
     try {
-      const response = await axios.post('/api/admin/ban-ip', { ip, action: 'ban', reason });
+      const response = await axios.post('/api/admin/users/action', { 
+        action: 'ban', 
+        value: ip 
+      });
       if (response.data.success) {
-        setStatus(`IP ${ip} banned successfully`);
+        setStatus(`IP ${ip} has been banned`);
+        fetchUsers();
       }
     } catch (err: any) {
       setError('Error banning IP');
@@ -73,121 +89,100 @@ export default function UsersPage() {
 
   const filteredUsers = users.filter(u => 
     u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.lastip?.includes(searchTerm)
+    u.ip.includes(searchTerm)
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex justify-between items-end">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-          <p className="text-zinc-400 mt-1">Manage all users registered in your application.</p>
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold text-white uppercase tracking-tighter">
+            Users Management
+          </h1>
+          <div className="px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-[10px] font-bold text-green-500 uppercase tracking-widest">
+              {users.filter(u => u.online).length} Active
+            </span>
+          </div>
         </div>
-        <button 
-          onClick={fetchUsers}
-          className="p-2 hover:bg-zinc-900 rounded-lg transition-colors text-zinc-500"
-          title="Refresh list"
-        >
-          <Activity size={20} className={loading ? "animate-spin" : ""} />
-        </button>
-      </div>
-
-      <div className="glass-card overflow-hidden">
-        <div className="p-6 border-b border-zinc-900 bg-zinc-900/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+        
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={14} />
             <input
               type="text"
-              placeholder="Search by name or IP..."
+              placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-black border border-zinc-800 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
+              className="bg-black/40 border border-zinc-800 rounded-lg pl-9 pr-4 py-1.5 text-xs w-48 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all"
             />
           </div>
-          <div className="flex gap-4 text-sm">
-            <div className="px-3 py-1 bg-zinc-900 rounded-full border border-zinc-800">
-              Total: <span className="text-white font-bold">{users.length}</span>
-            </div>
-          </div>
+          <button 
+            onClick={fetchUsers}
+            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors text-zinc-400"
+          >
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+          </button>
         </div>
+      </div>
 
+      <div className="glass-card overflow-hidden border-white/5 bg-zinc-950/40">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="text-zinc-500 border-b border-zinc-900 bg-zinc-950">
-                <th className="px-6 py-4 font-medium">User</th>
-                <th className="px-6 py-4 font-medium">Status</th>
-                <th className="px-6 py-4 font-medium">IP</th>
-                <th className="px-6 py-4 font-medium">Expiry</th>
-                <th className="px-6 py-4 font-medium text-right">Actions</th>
+              <tr className="text-zinc-500 border-b border-zinc-900 bg-black/40">
+                <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-widest">Username</th>
+                <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-widest">IP Address</th>
+                <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-widest">Last Seen</th>
+                <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-widest text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-900">
-              {loading ? (
+            <tbody className="divide-y divide-zinc-900/50">
+              {loading && users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">
-                    <Loader2 className="animate-spin mx-auto mb-2" size={24} />
-                    Loading users...
+                  <td colSpan={4} className="px-6 py-12 text-center text-zinc-500 text-xs italic">
+                    Loading records...
                   </td>
                 </tr>
               ) : filteredUsers.length > 0 ? (
                 filteredUsers.map((user) => (
-                  <tr key={user.username} className="hover:bg-zinc-900/30 transition-colors group">
+                  <tr key={user.originalUsername} className="hover:bg-white/[0.02] transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded bg-zinc-800 flex items-center justify-center text-[10px] font-bold">
-                          {user.username.substring(0, 2).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-bold text-white">{user.username}</p>
-                          <p className="text-[10px] text-zinc-500">ID: {user.id || 'N/A'}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1">
+                        <div className={cn(
+                          "w-2 h-2 rounded-full",
+                          user.online ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "bg-zinc-700"
+                        )}></div>
                         <span className={cn(
-                          "px-2 py-0.5 rounded-full text-[10px] font-bold w-fit",
-                          user.banned ? "bg-red-500/10 text-red-500" : "bg-green-500/10 text-green-500"
+                          "font-medium tracking-tight",
+                          user.online ? "text-white" : "text-zinc-400"
                         )}>
-                          {user.banned ? 'BANNED' : 'ACTIVE'}
+                          {user.username}
                         </span>
-                        {user.online && (
-                          <div className="flex items-center gap-1.5 ml-1">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                            <span className="text-[10px] text-green-500 font-medium">Online</span>
-                          </div>
-                        )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs text-zinc-400">
-                      {user.lastip || 'N/A'}
+                    <td className="px-6 py-4 font-mono text-xs text-zinc-500">
+                      {user.ip}
                     </td>
-                    <td className="px-6 py-4 text-zinc-500 text-xs">
-                      {user.expiry ? new Date(user.expiry * 1000).toLocaleDateString() : 'Never'}
+                    <td className="px-6 py-4 text-xs text-zinc-500">
+                      {user.lastSeen === 'N/A' ? 'Never' : new Date(user.lastSeen).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
                         <button 
-                          onClick={() => handleBanIp(user.lastip)}
-                          className="p-2 hover:bg-red-500/10 text-zinc-500 hover:text-red-500 rounded-lg transition-all"
+                          onClick={() => handleRename(user.originalUsername)}
+                          className="p-1.5 hover:bg-white/5 text-zinc-500 hover:text-white rounded transition-all"
+                          title="Rename User"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                        <button 
+                          onClick={() => handleBan(user.ip)}
+                          className="p-1.5 hover:bg-red-500/10 text-zinc-500 hover:text-red-500 rounded transition-all"
                           title="Ban IP"
                         >
-                          <ShieldAlert size={16} />
-                        </button>
-                        <button 
-                          onClick={() => handleBanUser(user.username)}
-                          disabled={user.banned}
-                          className="p-2 hover:bg-red-500/10 text-zinc-500 hover:text-red-500 rounded-lg transition-all disabled:opacity-20"
-                          title="Ban User"
-                        >
-                          <UserX size={16} />
-                        </button>
-                        <button 
-                          className="p-2 hover:bg-blue-500/10 text-zinc-500 hover:text-blue-500 rounded-lg transition-all"
-                          title="Reset HWID"
-                        >
-                          <Key size={16} />
+                          <ShieldBan size={14} />
                         </button>
                       </div>
                     </td>
@@ -195,8 +190,8 @@ export default function UsersPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">
-                    No users found.
+                  <td colSpan={4} className="px-6 py-12 text-center text-zinc-500 text-xs">
+                    No records found.
                   </td>
                 </tr>
               )}
@@ -207,8 +202,8 @@ export default function UsersPage() {
 
       {(error || status) && (
         <div className={cn(
-          "fixed bottom-8 right-8 p-4 rounded-xl shadow-2xl border animate-in slide-in-from-right-8 duration-500",
-          error ? "bg-red-500/10 border-red-500/20 text-red-500" : "bg-green-500/10 border-green-500/20 text-green-500"
+          "fixed bottom-6 right-6 px-4 py-2 rounded-lg text-xs font-bold border animate-in slide-in-from-bottom-4 duration-300",
+          error ? "bg-red-500/10 border-red-500/20 text-red-500" : "bg-white/10 border-white/20 text-white"
         )}>
           {error || status}
         </div>
