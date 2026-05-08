@@ -57,7 +57,7 @@ A premium, high-performance administration panel built with **Next.js 14**, **Ta
 For detailed integration guides (C++ and C#), check out:
 - [C++ Integration Guide](tutorial.md)
 - [C# Loader Example](appexample/program.cs)
-- [Project Wiki]((https://felipemartz.gitbook.io/adminpanel))
+- [Project Wiki](https://felipemartz.gitbook.io/adminpanel)
 
 ## 🛡️ Security
 
