@@ -27,8 +27,8 @@ A premium, high-performance administration panel built with **Next.js 14**, **Ta
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/baid-web.git
-   cd baid-web
+   git clone https://github.com/FelipeMartz/adminpanel.git
+   cd adminpanel
    ```
 
 2. **Install dependencies**:

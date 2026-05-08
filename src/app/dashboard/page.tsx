@@ -1,23 +1,64 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { 
   Users, 
   ShieldAlert, 
   Activity, 
-  TrendingUp 
+  TrendingUp,
+  Clock,
+  ExternalLink
 } from 'lucide-react';
-
-const stats = [
-  { name: 'Total Users', value: '1,234', icon: Users, change: '+12%', color: 'text-blue-500' },
-  { name: 'Recent Bans', value: '42', icon: ShieldAlert, change: '+2', color: 'text-red-500' },
-  { name: 'Active Today', value: '573', icon: Activity, change: '+5.4%', color: 'text-green-500' },
-  { name: 'New Licenses', value: '128', icon: TrendingUp, change: '+18%', color: 'text-purple-500' },
-];
+import axios from 'axios';
+import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
+  const [data, setData] = useState({
+    totalUsers: 0,
+    activeBans: 0,
+    onlineUsers: 0,
+    recentLogs: [] as any[]
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [usersRes, bansRes, logsRes, presenceRes] = await Promise.all([
+          axios.get('/api/admin/users'),
+          axios.get('/api/admin/ban-ip'),
+          fetch('/downloads/logs.json').then(res => res.json()).catch(() => []),
+          fetch('/downloads/presence.json').then(res => res.json()).catch(() => ({}))
+        ]);
+
+        setData({
+          totalUsers: usersRes.data.users?.length || 0,
+          activeBans: bansRes.data.length || 0,
+          onlineUsers: Object.keys(presenceRes).length || 0,
+          recentLogs: logsRes.slice(-5).reverse()
+        });
+      } catch (e) {
+        console.error('Error fetching dashboard stats');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const stats = [
+    { name: 'Total Users', value: data.totalUsers, icon: Users, color: 'text-blue-500' },
+    { name: 'Active IP Bans', value: data.activeBans, icon: ShieldAlert, color: 'text-red-500' },
+    { name: 'Users Online', value: data.onlineUsers, icon: Activity, color: 'text-green-500' },
+    { name: 'System Status', value: 'Live', icon: TrendingUp, color: 'text-purple-500' },
+  ];
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Control Panel</h1>
-        <p className="text-zinc-400 mt-1">General overview of your application.</p>
+        <p className="text-zinc-400 mt-1">Real-time overview of your application ecosystem.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -27,61 +68,73 @@ export default function DashboardPage() {
               <div className="p-2 bg-zinc-900 rounded-lg">
                 <stat.icon size={24} className={stat.color} />
               </div>
-              <span className="text-green-500 text-xs font-semibold px-2 py-1 bg-green-500/10 rounded-full">
-                {stat.change}
-              </span>
+              <div className="flex items-center gap-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                Live
+              </div>
             </div>
             <div>
               <p className="text-sm font-medium text-zinc-400">{stat.name}</p>
-              <h3 className="text-2xl font-bold mt-1">{stat.value}</h3>
+              <h3 className="text-2xl font-bold mt-1">
+                {loading ? '...' : stat.value}
+              </h3>
             </div>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-        <div className="glass-card p-8">
-          <h3 className="text-lg font-bold mb-4">Recent Activity</h3>
-          <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center gap-4 py-3 border-b border-zinc-900 last:border-0">
-                <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-xs font-bold">
-                  JS
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Juan_Soto has joined</p>
-                  <p className="text-xs text-zinc-500">5 minutes ago</p>
-                </div>
-                <div className="text-xs text-zinc-500">Trial</div>
-              </div>
-            ))}
+        <div className="glass-card overflow-hidden">
+          <div className="p-6 border-b border-zinc-900 bg-zinc-900/30 flex justify-between items-center">
+            <h3 className="font-bold">Recent Connections</h3>
+            <Clock size={16} className="text-zinc-500" />
+          </div>
+          <div className="p-0">
+            <table className="w-full text-left text-xs">
+              <tbody className="divide-y divide-zinc-900">
+                {data.recentLogs.length > 0 ? (
+                  data.recentLogs.map((log, i) => (
+                    <tr key={i} className="hover:bg-zinc-900/30 transition-colors">
+                      <td className="px-6 py-4 font-mono text-zinc-400">{log.ip}</td>
+                      <td className="px-6 py-4">
+                        <span className="px-2 py-0.5 bg-zinc-800 rounded text-zinc-300">v{log.version_checked}</span>
+                      </td>
+                      <td className="px-6 py-4 text-zinc-500 text-right">
+                        {new Date(log.timestamp).toLocaleTimeString()}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td className="px-6 py-12 text-center text-zinc-500" colSpan={3}>
+                      No recent activity found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <div className="glass-card p-8 bg-gradient-to-br from-zinc-900 to-zinc-950">
-          <h3 className="text-lg font-bold mb-4">System Status</h3>
-          <div className="space-y-6">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-zinc-400">API Servers</span>
-                <span className="text-green-500 font-medium">Operational</span>
-              </div>
-              <div className="w-full bg-zinc-800 rounded-full h-1.5">
-                <div className="bg-green-500 h-1.5 rounded-full w-[98%]"></div>
-              </div>
+        <div className="glass-card p-8 bg-gradient-to-br from-zinc-900 to-zinc-950 flex flex-col justify-center items-center text-center space-y-6 border-white/5">
+          <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 mb-2">
+            <ShieldAlert size={32} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold">Secure Infrastructure</h3>
+            <p className="text-zinc-400 text-sm mt-2 max-w-xs">
+              Your API is currently processing requests and enforcing IP-level security policies.
+            </p>
+          </div>
+          <div className="flex gap-4 w-full max-w-xs">
+            <div className="flex-1 p-3 bg-zinc-900/50 rounded-xl border border-white/5">
+              <p className="text-[10px] uppercase text-zinc-500 font-bold mb-1">Latency</p>
+              <p className="text-sm font-bold">24ms</p>
             </div>
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-zinc-400">Database Load</span>
-                <span className="text-zinc-400 font-medium">12%</span>
-              </div>
-              <div className="w-full bg-zinc-800 rounded-full h-1.5">
-                <div className="bg-white h-1.5 rounded-full w-[12%]"></div>
-              </div>
+            <div className="flex-1 p-3 bg-zinc-900/50 rounded-xl border border-white/5">
+              <p className="text-[10px] uppercase text-zinc-500 font-bold mb-1">Uptime</p>
+              <p className="text-sm font-bold">99.9%</p>
             </div>
-            <button className="w-full mt-4 text-sm text-zinc-400 hover:text-white transition-colors">
-              View detailed report →
-            </button>
           </div>
         </div>
       </div>
