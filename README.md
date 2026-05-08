@@ -2,7 +2,6 @@
 
 A premium, high-performance administration panel built with **Next.js 14**, **Tailwind CSS**, and **KeyAuth Integration**. This system provides a robust solution for managing software updates, user presence, and security (IP bans).
 
-![Dashboard Preview](https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1000)
 
 ## 🚀 Features
 
@@ -58,7 +57,7 @@ A premium, high-performance administration panel built with **Next.js 14**, **Ta
 For detailed integration guides (C++ and C#), check out:
 - [C++ Integration Guide](tutorial.md)
 - [C# Loader Example](appexample/program.cs)
-- [Project Wiki](wiki.md)
+- [Project Wiki]((https://felipemartz.gitbook.io/adminpanel))
 
 ## 🛡️ Security
 
